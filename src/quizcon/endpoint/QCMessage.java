@@ -28,6 +28,7 @@ public class QCMessage {
 
 	// Donne le nom de l'invité pour connexion type : logInv pour endpoint
 	private String invitName;
+	private boolean moniteurType;
 
 	// Donne l'id room type : joinRoom pour endpoint
 	private int roomId;
@@ -178,6 +179,14 @@ public class QCMessage {
 
 	public void setMaster(final boolean isMaster) {
 		this.isMaster = isMaster;
+	}
+
+	public boolean isMoniteurType() {
+		return moniteurType;
+	}
+
+	public void setMoniteurType(final boolean moniteurType) {
+		this.moniteurType = moniteurType;
 	}
 	
 	

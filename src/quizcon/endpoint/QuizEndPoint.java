@@ -64,13 +64,15 @@ public class QuizEndPoint {
 				isMaster = true;
 			}
 			gr.addSession(session);// rejoindre
-			rsr.addPlayer(roomId);
+			if (session.getUserProperties().get("type").equals("mobile")) {
+				rsr.addPlayer(roomId);
+			}
 			log.info("ok");
 			session.getUserProperties().put("roomId", roomId);
 			session.getUserProperties().put("score", 0);
 			session.getUserProperties().put("inRoom", true);
 			session.getUserProperties().put("master", isMaster);
-			
+
 			return true;
 		} else {
 			log.info("cant access");
@@ -94,18 +96,42 @@ public class QuizEndPoint {
 	public void close(final Session session) {
 		log.info("OnClose");
 		try {
-			final int id = (int) session.getUserProperties().get("roomId");
-			GameRoom gr = null;
-			if (id != 0) {
-				gr = get(id);
-				gr.removeSession(session);
-				log.info("OnClose1");
+			final boolean master = (boolean) session.getUserProperties().get("master");
+			final boolean inRoom = (boolean) session.getUserProperties().get("inRoom");
+
+			if (inRoom) {
+				final int id = (int) session.getUserProperties().get("roomId");
+				final GameRoom gr = get(id);
+				if (master) {// Le master quite
+					// Recherche dautres moniteurs
+					boolean flag = false;
+					for (final Session player : gr.getArs()) {
+						if (player.getUserProperties().get("type").equals("moniteur")) {
+							session.getUserProperties().put("master", true);
+							flag = true;
+							break;
+						}
+					}
+					if (!flag) {// Pas d'autre master potentiel fermeture de la room
+						rsr.deleteRoom(id);
+						for (final Session player : gr.getArs()) {
+							player.close();
+						}
+						GameRooms.remove(gr);
+						rsr.deleteRoom(id);
+					} else {// Un autre master est présent on vire l'ancien
+						gr.removeSession(session);
+						session.close();
+						rsr.removePlayer(id);
+					}
+				} else {// Juste un joueur normal
+					rsr.removePlayer(id);
+					gr.removeSession(session);
+					session.close();
+				}
+			} else {
+				session.close();
 			}
-			if (gr != null) {
-				GameRooms.remove(gr);
-				rsr.removePlayer(id);
-			}
-			session.close();
 		} catch (final IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -119,7 +145,7 @@ public class QuizEndPoint {
 		qcmess.setConnectUser((boolean) session.getUserProperties().get("logUser"));
 		qcmess.setConnectRoom((boolean) session.getUserProperties().get("inRoom"));
 		qcmess.setMaster((boolean) session.getUserProperties().get("master"));
-		
+
 		session.getBasicRemote().sendObject(qcmess);
 	}
 
@@ -136,7 +162,11 @@ public class QuizEndPoint {
 		switch (message.getType()) {
 		case "logInv":
 			log.info("ASK FOR logInv");
-			session.getUserProperties().put("type", "mobile");//TODO a changer voir mess client
+			if (message.isMoniteurType()) {
+				session.getUserProperties().put("type", "moniteur");
+			} else {
+				session.getUserProperties().put("type", "mobile");
+			}
 			session.getUserProperties().put("name", message.getInvitName());
 			session.getUserProperties().put("logInv", true);
 
@@ -145,7 +175,11 @@ public class QuizEndPoint {
 
 		case "logUser":
 			log.info("ASK FOR logUser");
-			session.getUserProperties().put("type", "mobile");
+			if (message.isMoniteurType()) {
+				session.getUserProperties().put("type", "moniteur");
+			} else {
+				session.getUserProperties().put("type", "mobile");
+			}
 			final Utilisateur user = usr.login(message.getUserName(), message.getPassword());
 			if (user != null) {
 				session.getUserProperties().put("user", user);
@@ -166,6 +200,15 @@ public class QuizEndPoint {
 			log.info("ASK FOR joinRoom");
 			createAndJoinRoom(session, message.getRoomId(), message.getRoomPassword());
 			sendSessionStatus(session);
+			
+			final GameRoom gr2 = get((int) session.getUserProperties().get("roomId"));
+			qcmess.setType("score");
+			qcmess.setScore(gr2.getScoreList());
+			for (final Session s : gr2.getArs()) {
+				s.getBasicRemote().sendObject(qcmess);
+			}
+			
+			
 			break;
 
 		case "init":
@@ -189,7 +232,7 @@ public class QuizEndPoint {
 				qcmess.setReponses(q.getListRepInString());
 				qcmess.setExplication(q.getExplications());
 			}
-			for (final Session s : gr.getArs()) {// Faire distinction entre moniteur et mobile?
+			for (final Session s : gr.getArs()) {
 				s.getBasicRemote().sendObject(qcmess);
 			}
 			break;

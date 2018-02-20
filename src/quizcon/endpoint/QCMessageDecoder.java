@@ -53,6 +53,7 @@ public class QCMessageDecoder implements Decoder.Text<QCMessage> {
 
 		if (qcMess.getType().equals("logInv")) {
 			qcMess.setInvitName(jsonObj.getString("invitName"));
+			qcMess.setMoniteurType(jsonObj.getBoolean("moniteurType"));
 
 		}
 		if (qcMess.getType().equals("logUser")) {

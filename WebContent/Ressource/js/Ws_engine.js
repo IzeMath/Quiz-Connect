@@ -1,5 +1,6 @@
 var wsocket = null;
-var serviceLocation = "ws://192.168.1.84:8080/Quiz-Connect/Quizcon";
+var serviceLocation = "ws://" + window.location.href.split("/")[2]
+		+ "/Quiz-Connect/Quizcon";
 var explication = "";
 
 function openWS() {
