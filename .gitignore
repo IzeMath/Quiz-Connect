@@ -20,12 +20,9 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-<<<<<<< HEAD
 build/classes/langues/QC.properties
 build/classes/langues/QC_en.properties
 <<<<<<< HEAD
 =======
 .tern-project
 >>>>>>> f6e555a2b11c275db4162645cdb8e57e46ebe6f7
-=======
->>>>>>> parent of f6e555a... NEW MAJ PROPRE
