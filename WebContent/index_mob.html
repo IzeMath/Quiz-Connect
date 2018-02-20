@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<title>QuizzProject</title>
+	<meta name="description" content="Jeux Interractif" />
+	<meta name="keywords" content="quiz, quizz, mobile quiz, blind test, blind-test" />
+	
+	<!-- Bootstrap core CSS -->
+	<link href="Ressource/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="Ressource/font-awesome/css/font-awesome.min.css" />
+
+
+	<!-- core CSS -->
+	<link rel="stylesheet" type="text/css" href="./Ressource/css/MainTheme.css" />
+	<link rel="stylesheet" type="text/css" href="./Ressource/css/component.css" />
+	<script src="./Ressource/js/snap.svg-min.js"></script>
+		
+		<!--[if IE]>
+	  		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+			<![endif]-->
+
+        <?php $_SESSION['lang'] = "fr"; ?>
+
+</head>
+	<body>
+			<!-- Sidebar -->
+			<nav class="navbar navbar-light navbar-expand-md navigation-clean">
+						<div class="container">
+							<a class="navbar-brand" href="#">QuizConnect</a>
+							<button id="toggler" class="navbar-toggler" data-toggle="collapse" data-target="#navcol-1" aria-expanded="false" aria-label="Toggle navigation" aria-controls="navbarResponsive" style="background-color:#17a2b8; color: #ffffff" >
+								<span class="sr-only">Toggle navigation</span>
+								<i class="fa fa-bars" aria-hidden="true"></i>
+							</button>
+
+							<div class="collapse navbar-collapse" id="navcol-1">
+								<ul class="nav navbar-nav ml-auto">
+									<c:choose>
+								<c:when test="${empty user}">
+									<li class="nav-item"><a class="nav-link"
+										href="#EnregistrementModal" data-toggle="modal"><fmt:message
+												key="navbar.enregistrement" /></a></li>
+									<li class="nav-item"><a class="nav-link"
+										href="#ConnexionModal" data-toggle="modal"><fmt:message key="navbar.connexion" /></a></li>
+								</c:when>
+								<c:otherwise>
+									<li class="nav-item"><a class="nav-link"
+										href="LogoutServlet"><c:out value="${user.getFname() }" /></a>
+									</li>
+
+								</c:otherwise>
+							</c:choose>
+								</ul>
+							</div>
+						</div>
+					</nav>
+
+					<div class="container ServerList serverStyle">
+							<form action="" method="post">
+								<div class="input-group" style="margin-top: 2%;">
+									<input type="text" name="IDROOM" class="form-control" placeholder="IDROOM">
+										<span class="input-group-btn">
+									 <button type="button" class="btn btn-info" >
+										 <span>GO</span>
+									 </button>
+									 </span>
+								</div>
+							</form>
+					</div>
+
+
+				<footer>
+					<p>© 2018<a style="color:#0a93a6; text-decoration:none;" href="#"> QuizConnect</a>, Tout droits réservés 2018-2019.</p>
+				</footer>
+
+			</div><!-- /container -->
+			</div><!-- /Main page -->
+			
+			
+		</div><!-- /pagewrap -->
+
+
+		<!-- Boostrap core JS -->
+		<script type="text/javascript"src="Ressource/jquery/jquery.min.js"></script>
+		<script type="text/javascript"src="Ressource/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+
+
+	</body>
+</html>
