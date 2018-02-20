@@ -22,3 +22,7 @@
 hs_err_pid*
 build/classes/langues/QC.properties
 build/classes/langues/QC_en.properties
+<<<<<<< HEAD
+=======
+.tern-project
+>>>>>>> f6e555a2b11c275db4162645cdb8e57e46ebe6f7

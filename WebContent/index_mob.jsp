@@ -167,7 +167,7 @@
 		<!-- Boostrap core JS -->
 		<script type="text/javascript"src="./Ressource/jquery/jquery.min.js"></script>
 		<script type="text/javascript"src="./Ressource/bootstrap/js/bootstrap.bundle.min.js"></script>
-		<!--  <script type="text/javascript" src="./Ressource/js/Detect_mob.js"></script>-->
+		<script type="text/javascript" src="./Ressource/js/Detect_mob.js"></script>
 		<script type="text/javascript" src="./Ressource/js/Ws_init.js"></script>
 
 
