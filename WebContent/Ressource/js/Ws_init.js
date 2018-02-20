@@ -15,7 +15,7 @@ function createRoom() {
 	mess.roomName = $("#rname").val();
 	mess.password = $("#rpass").val();
 	localStorage.setItem("mess", JSON.stringify(mess));
-	window.location.href = "/QC-IHM/GameServlet";
+	window.location.href = "/Quiz-Connect/GameServlet";
 	
 }
 
@@ -26,7 +26,7 @@ function joinRoom(idroom) {
 		password : ""
 	};
 	localStorage.setItem("mess", JSON.stringify(mess));
-	window.location.href = "/QC-IHM/GameServlet";
+	window.location.href = "/Quiz-Connect/GameServlet";
 }
 
 function joinRoomMob() {
@@ -37,7 +37,7 @@ function joinRoomMob() {
 	};
 	mess.roomId = $("#forbtnGoMob").val();
 	localStorage.setItem("mess", JSON.stringify(mess));
-	window.location.href = "/QC-IHM/GameServletmob";
+	window.location.href = "/Quiz-Connect/GameServletmob";
 }
 
 function setID(idroom)
@@ -53,5 +53,5 @@ function joinRoomPrivate() {
 	};
 	mess.password = $("#Wsjoinpass").val();
 	localStorage.setItem("mess", JSON.stringify(mess));
-	window.location.href = "QC-IHM/GameServlet";
+	window.location.href = "/Quiz-Connect/GameServlet";
 }

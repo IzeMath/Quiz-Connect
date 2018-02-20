@@ -44,7 +44,7 @@
 			</div> <!-- /sidebarWrapper -->
 			<nav class="navbar navbar-light navbar-expand-md navigation-clean">
 				<div class="container">
-					<a class="navbar-brand" href="/QC-IHM/GameServlet2">QuizConnect</a>
+					<a class="navbar-brand" href="/Quiz-Connect/GameServlet2">QuizConnect</a>
 					<button class="navbar-toggler" data-toggle="collapse" data-target="#navcol-1" style="background-color:#17a2b8; color: #ffffff" >
 						<span class="sr-only">Toggle navigation</span>
 						<i class="fa fa-bars" aria-hidden="true"></i>
@@ -52,7 +52,7 @@
 					<div class="collapse navbar-collapse" id="navcol-1">
 						<ul class="nav navbar-nav ml-auto">
 							<li class="nav-item">
-								<span class="nav-link" ><b>ID Room:</b> 922587</span>
+								<span class="nav-link" ><b>ID Room:</b> <span id="idroom">922587</span></span>
 							</li>
 						</ul>
 					</div>
