@@ -65,7 +65,7 @@
 								</c:when>
 								<c:otherwise>
 									<li class="nav-item"><a class="nav-link"
-										href="LogoutServlet"><c:out value="${user.getFname() }" /></a>
+										href="LogoutServlet"><c:out value="${user.getEmail() }" /></a>
 									</li>
 
 								</c:otherwise>

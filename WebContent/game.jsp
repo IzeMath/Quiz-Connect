@@ -89,7 +89,7 @@
 		var langs = JSON.stringify(getCheckedBoxes("ch_langs"));
 		//console.log(themes);
 		if (difficulties != "null" && langs != "null" && themes != "null") {
-			$.get("InfoQuestServlet", {
+			$.get("²", {
 				difficulties : difficulties,
 				themes : themes,
 				langs : langs

@@ -39,6 +39,8 @@ function joinRoomMob() {
 	if($("#MdpOfMobile").val() != null) mess.password = $("#MdpOfMobile").val();
 	localStorage.setItem("mess", JSON.stringify(mess));
 	localStorage.setItem("NameMobile", $("#NameOfMobile").val());
+	localStorage.setItem("IsConnected?", isConnect);
+	console.log(isConnect);
 	window.location.href = "/Quiz-Connect/GameServletmob";
 }
 

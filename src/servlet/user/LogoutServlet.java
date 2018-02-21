@@ -28,7 +28,7 @@ public class LogoutServlet extends HttpServlet {
 	 */
 	protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		request.getRequestDispatcher("/QuizConnect").forward(request, response);
+		request.getRequestDispatcher("/index.jsp").forward(request, response);
 	}
 
 	/**
