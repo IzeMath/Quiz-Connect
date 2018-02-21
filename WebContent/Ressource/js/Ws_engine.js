@@ -2,6 +2,8 @@ var wsocket = null;
 var serviceLocation = "ws://" + window.location.href.split("/")[2]
 		+ "/Quiz-Connect/Quizcon";
 var explication = "";
+var name = "";
+var isRoom = false;
 
 function openWS() {
 	wsocket = new WebSocket(serviceLocation);
@@ -22,12 +24,29 @@ function logInv() {
 			invitName : "moniteur",
 			moniteurType : true
 		};
+		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) {
+			mess.moniteurType = false;
+			name = localStorage.getItem("NameMobile");
+			if(name == "")
+			{
+				name = namealea();	
+			}
+			mess.invitName = name;
+		}
 		wsocket.send(JSON.stringify(mess));
 	}
 }
 
+function namealea()
+{
+	var nb = Math.floor(Math.random() * 15000);
+	var newName = "Guest" + nb;
+	return newName;
+}
+
 function joinRoom() {
 	wsocket.send(localStorage.getItem("mess"));
+	$("#idroom").html(JSON.parse(localStorage.getItem("mess")).roomId );
 }
 
 function getMaxQuestion() {
@@ -42,6 +61,7 @@ function getMaxQuestion() {
 			langs : langs
 		}, function(responseText) {
 			$("#maxqst").text(responseText);
+			$("#SendPara").prop('disabled', false);
 		});
 	}
 }
@@ -54,12 +74,13 @@ function onMessageReceived(evt) {
 		$('#question').empty();
 		$('#reponses').empty();
 		$('#question').append("<p>" + msg.question + "</p>");
-		if (navigator.userAgent
-				.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) {
+		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) 
+		{
 			for (var i = 0; i < msg.reponses.length; i++) {
 				var rep = $('<input type="button" class="block" onclick="sendReponse(this)" value="'
 						+ msg.reponses[i] + '">');
 				rep.appendTo('#reponses');
+				
 			}
 		}
 	}
@@ -76,7 +97,6 @@ function onMessageReceived(evt) {
 			$("#scoreList").append(
 					"<tr><td>" + sortedScore[i][0] + "</td><td>"
 							+ sortedScore[i][1] + "</td></tr>");
-
 		}
 	}
 
@@ -84,7 +104,9 @@ function onMessageReceived(evt) {
 		if (msg.logInv && !msg.inRoom) {
 			joinRoom();
 		}
+
 	}
+		
 }
 
 function askQuestion() {
@@ -147,15 +169,12 @@ function timerWS(nbquestions) {
 						timerWS(nbquestions - 1);
 
 					} else {
-						$('#reponses')
-								.html(
-										"Bienvenu dans le salon de jeu, pour vous permettre de repondre, il vous faut utilise votre smartphone a cette url, il vous faudra saisir l’id, qui se situe en haut a droite, de la room afin de la rejoindre. Vous aurez dix secondes pour repondre à chaque questions depuis votre smartphone. Have fun.");
+						$('#reponses').html("Bienvenu dans le salon de jeu, pour vous permettre de repondre, il vous faut utilise votre smartphone a cette url, il vous faudra saisir l’id, qui se situe en haut a droite, de la room afin de la rejoindre. Vous aurez dix secondes pour repondre à chaque questions depuis votre smartphone. Have fun.");
 						$('#question').html("Regle");
 					}
 
 				}
 			}, 1000);
-
 }
 
 function getCheckedBoxes(chkboxName) {

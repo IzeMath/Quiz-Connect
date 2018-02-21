@@ -44,7 +44,7 @@
 					<div class="collapse navbar-collapse" id="navcol-1">
 						<ul class="nav navbar-nav ml-auto">
 							<li class="nav-item">
-								<span class="nav-link" ><b>ID Room:</b><span id="idroom" >000000</span></span>
+								<span class="nav-link" ><b>ID <fmt:message key="playroom.lobby" />:</b><span id="idroom" >000000</span></span>
 							</li>
 						</ul>
 					</div>
@@ -57,8 +57,7 @@
 							<div class="container-fluid ">
 								<div class="row">
 									<div class="centering" >
-									<div class="centering_child" id="reponses"><p class="regle" > Attente du lobby</p></div>
-										
+										<div class="centering_child" id="reponses"><p class="regle" > <fmt:message key="playroom.attente" /></p></div>
 									</div>
 
 								</div>

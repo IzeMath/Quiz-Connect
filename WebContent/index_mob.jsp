@@ -35,6 +35,16 @@
 </head>
 	<body>
 			<!-- Sidebar -->
+			<div id="sidebar-wrapper2">
+				<form>
+					<select  id="language" name="language" onchange="submit()">
+						<option value="en" ${language == 'en' ? 'selected' : ''}>En</option>
+						<option value="fr" ${language == 'fr' ? 'selected' : ''}>Fr</option>
+					</select>
+				</form>
+			</div> <!-- /sidebarWrapper -->
+			
+			
 			<nav class="navbar navbar-light navbar-expand-md navigation-clean">
 						<div class="container">
 							<a class="navbar-brand" href="#">QuizConnect</a>
@@ -57,7 +67,6 @@
 									<li class="nav-item"><a class="nav-link"
 										href="LogoutServlet"><c:out value="${user.getFname() }" /></a>
 									</li>
-
 								</c:otherwise>
 							</c:choose>
 								</ul>
@@ -65,16 +74,26 @@
 						</div>
 					</nav>
 
-					
+				<div class="centering_child" >
 						<div class="input-group Container_Mob">
-								<input type="number" id="forbtnGoMob" name="IDROOM" class="form-control" placeholder="IDROOM">
+						<fmt:message key="indexmob.name" var="nameForPlay" />
+								<input type="text" id="NameOfMobile" name="NameOfMobile" class="form-control" placeholder="${nameForPlay}" />
+					</div>
+					<div class="input-group Container_Mob">
+					<fmt:message key="indexmob.id" var="idForPlay" />
+						<input type="number" id="forbtnGoMob" name="IDROOM" class="form-control" placeholder="${idForPlay}" required />	
+					</div>
+						<div class="input-group Container_Mob">
+						<fmt:message key="indexmob.password" var="passForPlay" />
+								<input type="text" id="MdpOfMobile" name="MDPROOM" class="form-control" placeholder="${passForPlay}" />
 								<span class="input-group-btn">
 								<button type="button" class="btn btn-info" onclick="joinRoomMob()"> >
 								<span>GO</span>
 								</button>
 								</span>
 						</div>
-							
+						
+				</div>
 					
 			
 				<div id="ConnexionModal" class="modal fade">

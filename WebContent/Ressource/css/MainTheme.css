@@ -67,8 +67,7 @@ body {background: #17a2b8; height: 100%; color: #fff;font-size: 16px;font-weight
 .btn-circle.btn-xl {width: 70px;height: 70px;padding: 10px 16px;font-size: 24px;line-height: 1.33;border-radius: 35px;}
 .navbar-search {min-width: 25px; max-width: 40%;}
 .ServerListStyle{background-color: #17a2b8; border-radius: 10px; padding-bottom: 2%; padding-top: 2%; width: 100%; height: 100%;}
-
-.Container_Mob{background: white; padding : 2% 2% 2% 2%; border-radius: 10px; margin-top:50%}
+.Container_Mob{background: white; padding : 2% 2% 2% 2%; border-radius: 10px;}
 
 
 /* Slot server */

@@ -33,10 +33,12 @@ function joinRoomMob() {
 	var mess = {
 		type : "joinRoom",
 		roomId : "",
-		password : ""
+		password : "",
 	};
 	mess.roomId = $("#forbtnGoMob").val();
+	if($("#MdpOfMobile").val() != null) mess.password = $("#MdpOfMobile").val();
 	localStorage.setItem("mess", JSON.stringify(mess));
+	localStorage.setItem("NameMobile", $("#NameOfMobile").val());
 	window.location.href = "/Quiz-Connect/GameServletmob";
 }
 

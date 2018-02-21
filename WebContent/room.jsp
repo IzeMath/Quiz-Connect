@@ -33,15 +33,7 @@
 	</head>
 	<body>
 		<div id="pagewrap" class="pagewrap">
-					<!-- Sidebar -->
-			<div id="sidebar-wrapper2">
-				<form>
-					<select  id="language" name="language" onchange="submit()">
-						<option value="en" ${language == 'en' ? 'selected' : ''}>En</option>
-						<option value="fr" ${language == 'fr' ? 'selected' : ''}>Fr</option>
-					</select>
-				</form>
-			</div> <!-- /sidebarWrapper -->
+			
 			<nav class="navbar navbar-light navbar-expand-md navigation-clean">
 				<div class="container">
 					<a class="navbar-brand" href="/Quiz-Connect/GameServlet2">QuizConnect</a>
@@ -52,7 +44,7 @@
 					<div class="collapse navbar-collapse" id="navcol-1">
 						<ul class="nav navbar-nav ml-auto">
 							<li class="nav-item">
-								<span class="nav-link" ><b>ID Room:</b> <span id="idroom">922587</span></span>
+								<span class="nav-link" ><b>ID <fmt:message key="playroom.lobby" />:</b> <span id="idroom">000000</span></span>
 							</li>
 						</ul>
 					</div>
@@ -63,7 +55,7 @@
 						<div id="sidebar-wrapper">
 							<ul class="sidebar-nav">
 								<li>
-									<h6 class="Tab_Title">Players / Score</h6>
+									<h6 class="Tab_Title"><fmt:message key="playroom.score" /></h6>
 									<div class="Tabscore_players">
 										<table class="table" >
 											<tbody id="scoreList">
@@ -76,7 +68,7 @@
 									</div>
 								</li>
 								<li>
-									<h6 class="Tab_Title">Parameters</h6>
+									<h6 class="Tab_Title"><fmt:message key="playroom.parameters" /></h6>
 
 									<div class="ParamStyle" >
 										<div class="input-group">
@@ -87,7 +79,7 @@
 											</button>
 										</div>
 									</div>
-									<h6 class="Tab_Title">Difficultes</h6>
+									<h6 class="Tab_Title"><fmt:message key="playroom.difficult" /></h6>
 									<div class="ParamStyle" >
 										<div class="funkyradio">
 										<c:forEach var="itm" items="${difficulties}">
@@ -98,7 +90,7 @@
 										</c:forEach>
 										</div>
 									</div>
-									<h6 class="Tab_Title">Thematique</h6>
+									<h6 class="Tab_Title"><fmt:message key="playroom.theme" /></h6>
 									<div class="ParamStyle" >
 										<div class="funkyradio">
 										
@@ -132,10 +124,8 @@
 							<div class="container-fluid ">
 								<div class="row">
 									<div class="col-lg-12 centering">
-										<h1 id="question">Regles:</h1>
-										<p class="regle" id="reponses" >Bienvenu dans le salon de jeu, pour vous permettre de repondre, il vous faut utilise votre smartphone a cette url, il vous faudra saisir l’id, qui se situe en haut a droite, de la room afin de la rejoindre.
-											Vous aurez dix secondes pour repondre à chaque questions depuis votre smartphone.
-											Have fun.
+										<h1 id="question"><fmt:message key="playroom.titleregle" /></h1>
+										<p class="regle" id="reponses" ><fmt:message key="playroom.regle" />
 										</p>
 										<h1 id="countdowntimer"></h1>
 									</div>
