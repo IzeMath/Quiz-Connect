@@ -1,5 +1,6 @@
 package quizcon.endpoint;
 
+import java.net.URL;
 import java.util.Hashtable;
 
 import org.quizcon.QuestionParameters;
@@ -15,6 +16,7 @@ public class QCMessage {
 	private String question;
 	private String[] reponses;
 	private String explication;
+	private URL url;
 
 	// Donne une reponse type : reponse pour endpoint
 	private String reponse;
@@ -187,6 +189,14 @@ public class QCMessage {
 
 	public void setMoniteurType(final boolean moniteurType) {
 		this.moniteurType = moniteurType;
+	}
+
+	public URL getUrl() {
+		return url;
+	}
+
+	public void setUrl(final URL url) {
+		this.url = url;
 	}
 	
 	

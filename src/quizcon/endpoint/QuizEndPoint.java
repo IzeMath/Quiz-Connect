@@ -105,9 +105,14 @@ public class QuizEndPoint {
 				if (master) {// Le master quite
 					// Recherche dautres moniteurs
 					boolean flag = false;
+					
+					gr.removeSession(session);
+					session.close();
+					rsr.removePlayer(id);
+					
 					for (final Session player : gr.getArs()) {
 						if (player.getUserProperties().get("type").equals("moniteur")) {
-							session.getUserProperties().put("master", true);
+							player.getUserProperties().put("master", true);
 							flag = true;
 							break;
 						}
@@ -124,10 +129,6 @@ public class QuizEndPoint {
 						session.close();
 						rsr.removePlayer(id);
 					}
-				} else {// Juste un joueur normal
-					rsr.removePlayer(id);
-					gr.removeSession(session);
-					session.close();
 				}
 			} else {
 				session.close();
@@ -231,6 +232,7 @@ public class QuizEndPoint {
 				qcmess.setQuestion(q.getLibelle());
 				qcmess.setReponses(q.getListRepInString());
 				qcmess.setExplication(q.getExplications());
+				qcmess.setUrl(q.getContenuURL());
 			}
 			for (final Session s : gr.getArs()) {
 				s.getBasicRemote().sendObject(qcmess);
