@@ -31,6 +31,10 @@
 		<!--[if IE]>
 	  		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 			<![endif]-->
+			
+			<script>
+				var isConnect = false;
+			</script>
 
 </head>
 	<body>
@@ -62,11 +66,16 @@
 												key="navbar.enregistrement" /></a></li>
 									<li class="nav-item"><a class="nav-link"
 										href="#ConnexionModal" data-toggle="modal"><fmt:message key="navbar.connexion" /></a></li>
+									<script>
+										isConnect = false;
+									</script>
 								</c:when>
 								<c:otherwise>
-									<li class="nav-item"><a class="nav-link"
-										href="LogoutServlet"><c:out value="${user.getFname() }" /></a>
+									<li class="nav-item"><a class="nav-link" href="LogoutServlet" id="userEmail"><c:out value="${user.getEmail() }" /></a>
 									</li>
+									<script>
+										isConnect = true;
+									</script>
 								</c:otherwise>
 							</c:choose>
 								</ul>

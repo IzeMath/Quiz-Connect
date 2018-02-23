@@ -37,6 +37,25 @@ function logInv() {
 	}
 }
 
+/*function logUser() {
+	if (wsocket == null) {
+		openWS();
+	}
+	wsocket.onopen = function() {
+		var mess = {
+			type : "logUser",
+			invitName : "moniteur",
+			moniteurType : true
+		};
+		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) {
+			mess.moniteurType = false;
+			name = $("userEmail").val();
+			mess.invitName = name;
+		}
+		wsocket.send(JSON.stringify(mess));
+	}
+}*/
+
 function namealea()
 {
 	var nb = Math.floor(Math.random() * 15000);
@@ -189,4 +208,8 @@ function getCheckedBoxes(chkboxName) {
 	return checkboxesChecked.length > 0 ? checkboxesChecked : null;
 }
 
-logInv();
+var isConnected = localStorage.getItem("IsConnected?");
+console.log(isConnected);
+//mettre useragent
+if(isConnected == true) logUser();
+else logInv();
