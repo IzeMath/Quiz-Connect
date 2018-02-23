@@ -26,7 +26,7 @@ public class QCMessageEncoder implements Encoder.Text<QCMessage> {
 			final JSONArray jsar = new JSONArray(qcMess.getReponses());
 			jsonObj.put("reponses", jsar);
 			jsonObj.put("explication", qcMess.getExplication());
-			jsonObj.put("url", qcMess.getUrl().toString());
+			jsonObj.put("url", qcMess.getUrl());
 		}
 		if (qcMess.getType().equals("score")) {
 			jsonObj.put("type", qcMess.getType());
