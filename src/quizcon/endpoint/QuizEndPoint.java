@@ -15,14 +15,16 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-import org.quizcon.Question;
-import org.quizcon.QuestionParameters;
 import org.user.Utilisateur;
 
 import questionServices.QuestionsServiceRemote;
 import roomServices.RoomServicesRemote;
 import userService.UserServicesRemote;
 
+/**
+ * @author IzeMath
+ *
+ */
 @Stateless
 @ServerEndpoint(value = "/Quizcon", encoders = QCMessageEncoder.class, decoders = QCMessageDecoder.class)
 public class QuizEndPoint {
@@ -53,207 +55,236 @@ public class QuizEndPoint {
 		}
 	}
 
-	private boolean createAndJoinRoom(final Session session, final int roomId, final String password) {
-		GameRoom gr = get(roomId);
-		log.info("id : " + roomId);
-		boolean isMaster = false;
-		if (rsr.canAccess(roomId, password)) {// en bdd
-			if (gr == null) {// Creation endpoint
-				gr = new GameRoom(roomId);
-				GameRooms.add(gr);
-				isMaster = true;
-			}
-			gr.addSession(session);// rejoindre
-			if (session.getUserProperties().get("type").equals("mobile")) {
-				rsr.addPlayer(roomId);
-			}
-			log.info("ok");
-			session.getUserProperties().put("roomId", roomId);
-			session.getUserProperties().put("score", 0);
-			session.getUserProperties().put("inRoom", true);
-			session.getUserProperties().put("master", isMaster);
+	@OnOpen
+	public void open(final Session session) {
+		log.info("OnOpen");
+	}
 
-			return true;
-		} else {
-			log.info("cant access");
+	@OnClose
+	public void close(final Session session) throws IOException {
+		log.info("OnClose");
+		String type = "";
+		int roomId = 0;
+		GameRoom gr = null;
+		try {
+			type = (String) session.getUserProperties().get("type");
+			roomId = (int) session.getUserProperties().get("roomId");
+			gr = get(roomId);
+		} catch (final Exception e) {
+			// Session pas ini
+			session.close();
+			return;
+		}
+
+		if (type.equals("moniteur")) {
+			final boolean master = (boolean) session.getUserProperties().get("master");
+			gr.removeMonitor(session);
+
+			// La session master a quitté
+			if (master) {
+				log.info("Change Master");
+				// S'il n'y a pas d'autre master suppression de la salle
+				if (!gr.setANewMaster()) {
+					log.info("salon supprimé");
+					gr.interrupt();
+					gr.logoutAllPlayers();
+					GameRooms.remove(gr);
+
+					try {
+						rsr.deleteRoom(roomId);
+					} catch (final Exception e) {
+					}
+				}
+				session.close();
+			}
+		}
+		if (type.equals("mobile")) {
+			gr.removePlayer(session);
+			if (session.getUserProperties().get("user") != null) {
+				final Utilisateur user = (Utilisateur) session.getUserProperties().get("user");
+				usr.updateStat(user);
+			}
+
+			session.close();
+		}
+
+	}
+
+	/**
+	 * @param s
+	 * @return true si la session peut démarer une partie master = true, type =
+	 *         moniteur, roomId init
+	 */
+	private boolean canStartGame(final Session s) {
+		try {
+			final int roomId = (int) s.getUserProperties().get("roomId");
+			final boolean isMaster = (boolean) s.getUserProperties().get("master");
+			final String type = (String) s.getUserProperties().get("type");
+			if (roomId != 0 && isMaster && type.equals("moniteur")) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (final Exception e) {
 			return false;
 		}
 	}
 
-	@OnOpen
-	public void open(final Session session) {
-		log.info("OnOpen");
-		session.getUserProperties().put("type", "moniteur");
-		session.getUserProperties().put("roomId", 0);
-
-		session.getUserProperties().put("logInv", false);
-		session.getUserProperties().put("logUser", false);
-		session.getUserProperties().put("inRoom", false);
-		session.getUserProperties().put("master", false);
-	}
-
-	@OnClose
-	public void close(final Session session) {
-		log.info("OnClose");
+	private boolean canGiveResponse(final Session s) {
 		try {
-			final boolean master = (boolean) session.getUserProperties().get("master");
-			final boolean inRoom = (boolean) session.getUserProperties().get("inRoom");
+			final int roomId = (int) s.getUserProperties().get("roomId");
+			final String type = (String) s.getUserProperties().get("type");
+			final GameRoom tmp = get(roomId);
 
-			if (inRoom) {
-				final int id = (int) session.getUserProperties().get("roomId");
-				final GameRoom gr = get(id);
-				if (master) {// Le master quite
-					// Recherche dautres moniteurs
-					boolean flag = false;
-					
-					gr.removeSession(session);
-					session.close();
-					rsr.removePlayer(id);
-					
-					for (final Session player : gr.getArs()) {
-						if (player.getUserProperties().get("type").equals("moniteur")) {
-							player.getUserProperties().put("master", true);
-							flag = true;
-							break;
-						}
-					}
-					if (!flag) {// Pas d'autre master potentiel fermeture de la room
-						rsr.deleteRoom(id);
-						for (final Session player : gr.getArs()) {
-							player.close();
-						}
-						GameRooms.remove(gr);
-						rsr.deleteRoom(id);
-					} else {// Un autre master est présent on vire l'ancien
-						gr.removeSession(session);
-						session.close();
-						rsr.removePlayer(id);
-					}
-				}
+			if (tmp != null && type.equals("mobile")) {
+				return true;
 			} else {
-				session.close();
+				return false;
 			}
-		} catch (final IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (final Exception e) {
+			return false;
 		}
-	}
-
-	private void sendSessionStatus(final Session session) throws IOException, EncodeException {
-		final QCMessage qcmess = new QCMessage();
-		qcmess.setType("inform");
-		qcmess.setConnectInv((boolean) session.getUserProperties().get("logInv"));
-		qcmess.setConnectUser((boolean) session.getUserProperties().get("logUser"));
-		qcmess.setConnectRoom((boolean) session.getUserProperties().get("inRoom"));
-		qcmess.setMaster((boolean) session.getUserProperties().get("master"));
-
-		session.getBasicRemote().sendObject(qcmess);
 	}
 
 	@OnMessage
 	public void onMessage(final Session session, final QCMessage message) throws IOException, EncodeException {
-		final QCMessage qcmess = new QCMessage();
 
-		final int id = (int) session.getUserProperties().get("roomId");
-		GameRoom gr = null;
-		if (id != 0) {
-			gr = get(id);
+		// Mobile
+		if (message instanceof QCM_PlayerConnected) {
+			final QCM_PlayerConnected messPlayerConnected = (QCM_PlayerConnected) message;
+
+			log.info("DEMANDE : mobile connected");
+			final Utilisateur user = usr.getById(messPlayerConnected.getUserId());
+
+			if (user != null && rsr.canAccess(messPlayerConnected.getRoomId(), messPlayerConnected.getPassw())) {
+				final GameRoom gameR = get(messPlayerConnected.getRoomId());
+				if (gameR != null) {
+					// Attribut session
+					session.getUserProperties().put("type", "mobile");
+					session.getUserProperties().put("user", user);
+					session.getUserProperties().put("name", user.getUsername());
+					session.getUserProperties().put("score", 0);
+					session.getUserProperties().put("reponse", "");
+					session.getUserProperties().put("roomId", messPlayerConnected.getRoomId());
+
+					gameR.addPlayer(session);
+				} else {
+					log.warning("ERREUR Le salon: " + messPlayerConnected.getRoomId() + " n'existe pas en WS");
+				}
+			} else {
+				log.warning("ERREUR La session mobile n'a pas pu se connecter au salon: "
+						+ messPlayerConnected.getRoomId());
+			}
+
+		}
+		// Mobile
+		if (message instanceof QCM_PlayerInv) {
+			final QCM_PlayerInv messPlayerInv = (QCM_PlayerInv) message;
+
+			log.info("DEMANDE : mobile invit");
+
+			if (rsr.canAccess(messPlayerInv.getRoomId(), messPlayerInv.getPassw())) {
+				final GameRoom gameR = get(messPlayerInv.getRoomId());
+				if (gameR != null) {
+
+					// Attribut session
+					session.getUserProperties().put("type", "mobile");
+					session.getUserProperties().put("name", messPlayerInv.getName());
+					session.getUserProperties().put("score", 0);
+					session.getUserProperties().put("reponse", "");
+					session.getUserProperties().put("roomId", messPlayerInv.getRoomId());
+
+					gameR.addPlayer(session);
+				} else {
+					log.warning("ERREUR Le salon: " + messPlayerInv.getRoomId() + " n'existe pas en WS");
+				}
+
+			} else {
+				log.warning("ERREUR La session mobile n'a pas pu se connecter au salon: " + messPlayerInv.getRoomId());
+			}
 		}
 
-		switch (message.getType()) {
-		case "logInv":
-			log.info("ASK FOR logInv");
-			if (message.isMoniteurType()) {
-				session.getUserProperties().put("type", "moniteur");
-			} else {
-				session.getUserProperties().put("type", "mobile");
-			}
-			session.getUserProperties().put("name", message.getInvitName());
-			session.getUserProperties().put("logInv", true);
+		// Moniteur
+		if (message instanceof QCM_MonitorCreate) {
+			final QCM_MonitorCreate messMonitorCreate = (QCM_MonitorCreate) message;
 
-			sendSessionStatus(session);
-			break;
+			log.info("DEMANDE : monitor create");
 
-		case "logUser":
-			log.info("ASK FOR logUser");
-			if (message.isMoniteurType()) {
-				session.getUserProperties().put("type", "moniteur");
-			} else {
-				session.getUserProperties().put("type", "mobile");
-			}
-			final Utilisateur user = usr.login(message.getUserName(), message.getPassword());
-			if (user != null) {
-				session.getUserProperties().put("user", user);
-				session.getUserProperties().put("name", user.getUsername());
-				session.getUserProperties().put("logUser", true);
-			}
-			sendSessionStatus(session);
-			break;
+			// Creation Room
+			final int newRoomId = rsr.createRoom(messMonitorCreate.getRoomName(), messMonitorCreate.getRoomPassw());
+			final GameRoom gameR = new GameRoom(newRoomId);
+			gameR.addMonitor(session);
+			GameRooms.add(gameR);
 
-		case "createRoom":
-			log.info("ASK FOR createRoom");
-			final int newRoomId = rsr.createRoom(message.getRoomName(), message.getRoomPassword());
-			createAndJoinRoom(session, newRoomId, message.getRoomPassword());
-			sendSessionStatus(session);
-			break;
+			// Attribut session
+			session.getUserProperties().put("type", "moniteur");
+			session.getUserProperties().put("master", true);
+			session.getUserProperties().put("roomId", newRoomId);
 
-		case "joinRoom":
-			log.info("ASK FOR joinRoom");
-			createAndJoinRoom(session, message.getRoomId(), message.getRoomPassword());
-			sendSessionStatus(session);
-			
-			final GameRoom gr2 = get((int) session.getUserProperties().get("roomId"));
-			qcmess.setType("score");
-			qcmess.setScore(gr2.getScoreList());
-			for (final Session s : gr2.getArs()) {
-				s.getBasicRemote().sendObject(qcmess);
-			}
-			
-			
-			break;
+			log.info("Le salon " + newRoomId + " a été créé");
+		}
+		// Moniteur
+		if (message instanceof QCM_MonitorJoin) {
+			final QCM_MonitorJoin messMonitorJoin = (QCM_MonitorJoin) message;
 
-		case "init":
-			log.info("ASK FOR INIT");
-			log.info(message.getQp().toString());
+			log.info("DEMANDE : monitor join");
 
-			final QuestionParameters qp = message.getQp();
-			gr.setQp(qp);// pas utile?
+			if (rsr.canAccess(messMonitorJoin.getRoomId(), messMonitorJoin.getRoomPassw())) {
+				final GameRoom gameR = get(messMonitorJoin.getRoomId());
 
-			gr.setArq(qsr.getQuestionsWithParameters(qp));
+				if (gameR != null) {
+					gameR.addMonitor(session);
 
-			break;
-
-		case "question":
-			log.info("ASK FOR QUESTION");
-			final Question q = gr.nextQuestion();
-
-			if (q != null) {
-				qcmess.setType("question");
-				qcmess.setQuestion(q.getLibelle());
-				qcmess.setReponses(q.getListRepInString());
-				qcmess.setExplication(q.getExplications());
-				qcmess.setUrl(q.getContenuURL());
-			}
-			for (final Session s : gr.getArs()) {
-				s.getBasicRemote().sendObject(qcmess);
-			}
-			break;
-
-		case "reponse":
-			log.info("ASK FOR RESPONSE");
-			if (gr.getLaReponse().equals(message.getReponse())) {// Si bonne reponse
-				int score = (int) session.getUserProperties().get("score");
-				score += 1;
-				session.getUserProperties().put("score", score);
-				log.info("GOOD JOB!");
-
-				qcmess.setType("score");
-				qcmess.setScore(gr.getScoreList());
-				for (final Session s : gr.getArs()) {// Faire distinction entre moniteur et mobile
-					s.getBasicRemote().sendObject(qcmess);
+					// Attribut session
+					session.getUserProperties().put("type", "moniteur");
+					session.getUserProperties().put("master", false);
+					session.getUserProperties().put("roomId", messMonitorJoin.getRoomId());
+				} else {
+					log.warning("ERREUR Le salon: " + messMonitorJoin.getRoomId() + " n'existe pas en WS");
 				}
+
+			} else {
+				log.warning(
+						"ERREUR La session moniteur n'a pas pu se connecter au salon: " + messMonitorJoin.getRoomId());
 			}
-			break;
+
+		}
+		// Moniteur
+		if (message instanceof QCM_StartGame) {
+			final QCM_StartGame messStartGame = (QCM_StartGame) message;
+
+			log.info("DEMANDE : start game");
+			// Controle session
+			if (canStartGame(session)) {
+
+				final int roomId = (int) session.getUserProperties().get("roomId");
+				final GameRoom gameR = get(roomId);
+
+				// Controle room
+				if (gameR != null) {
+
+					gameR.setArq(qsr.getQuestionsWithParameters(messStartGame.getQp()));
+					gameR.start();
+
+				} else {
+					log.warning("ERREUR Le salon: " + roomId + " n'existe pas en WS");
+				}
+			} else {
+				log.warning("ERREUR La session n'est pas correctement initialisée");
+			}
+
+		}
+
+		// Mobile
+		if (message instanceof QCM_PlayerReponse) {
+			final QCM_PlayerReponse messPlayerReponse = (QCM_PlayerReponse) message;
+
+			log.info("DEMANDE : player reponse");
+			if (canGiveResponse(session)) {
+				session.getUserProperties().put("reponse", messPlayerReponse.getReponse());
+			} else {
+				log.warning("ERREUR La session n'est pas correctement initialisée");
+			}
 		}
 
 	}

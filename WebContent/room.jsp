@@ -125,7 +125,7 @@
 								<div class="row">
 									<div class="col-lg-12 centering">
 										<h1 id="question"><fmt:message key="playroom.titleregle" /></h1>
-										<p class="regle" id="reponses" ><fmt:message key="playroom.regle" />
+										<p class="regle" id="explications" ><fmt:message key="playroom.regle" />
 										</p>
 										<h1 id="countdowntimer"></h1>
 									</div>

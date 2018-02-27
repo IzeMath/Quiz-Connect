@@ -2,7 +2,6 @@ package servlet.quizcon;
 
 import java.io.IOException;
 
-import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,22 +11,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 import org.user.Utilisateur;
 
-import userService.UserServicesRemote;
-
 /**
- * Servlet implementation class StatUserServlet
+ * Servlet implementation class GetUserIdServlet
  */
-@WebServlet("/StatUserServlet")
-public class StatUserServlet extends HttpServlet {
+@WebServlet("/GetUserIdServlet")
+public class GetUserIdServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
-	@EJB
-	UserServicesRemote usr;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
-	public StatUserServlet() {
+	public GetUserIdServlet() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -39,12 +33,16 @@ public class StatUserServlet extends HttpServlet {
 	protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		// final Utilisateur user = (Utilisateur)
-		// request.getSession().getAttribute("user");
-		final Utilisateur user = usr.login("az@gt.fr", "azerty");
-		final JSONObject jo = new JSONObject(usr.getStats(user));
 		response.setContentType("application/json");
-		response.getWriter().append(jo.toString());
+		final JSONObject jobject = new JSONObject();
+		jobject.put("userId", "");
+
+		final Utilisateur user = (Utilisateur) request.getSession().getAttribute("user");
+		if (user != null) {
+			jobject.put("userId", "" + user.getId());
+		}
+
+		response.getWriter().append(jobject.toString());
 	}
 
 	/**
