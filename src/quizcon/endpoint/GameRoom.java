@@ -1,108 +1,162 @@
 package quizcon.endpoint;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.websocket.EncodeException;
 import javax.websocket.Session;
 
 import org.quizcon.Question;
-import org.quizcon.QuestionParameters;
+import org.user.Statistique;
+import org.user.Utilisateur;
 
-public class GameRoom {
-	private int id;
-	private String name;
-	private final ArrayList<Session> ars = new ArrayList<>();
+public class GameRoom extends Thread {
+	private final int num;
 
+	private final ArrayList<Session> arPlayers = new ArrayList<>();
+	private final ArrayList<Session> arMonitors = new ArrayList<>();
 	private List<Question> arq;
-	private Question doing = null;
-	private QuestionParameters qp;
 
-	public GameRoom(final int id) {
-		this.id = id;
+	public GameRoom(final int num) {
+		this.num = num;
 	}
 
-	public boolean addSession(final Session s) {
-		return ars.add(s);
-	}
+	public void start() {
+		try {
+			for (final Question question : arq) {
+				final QCM_Question messQuestion = new QCM_Question(question);
 
-	public boolean removeSession(final Session s) {
-		return ars.remove(s);
-	}
+				// Envoyer la question
+				messQuestion.setType("question");
+				for (final Session monitor : arMonitors) {
+					monitor.getBasicRemote().sendObject(messQuestion);
+				}
 
-	public boolean isEnd() {
-		return arq.isEmpty();
-	}
+				// Envoyer les choix de réponses
+				messQuestion.setType("listRep");
+				for (final Session player : arPlayers) {
+					player.getBasicRemote().sendObject(messQuestion);
+				}
 
-	public Question nextQuestion() {
-		if (!arq.isEmpty()) {
-			final Question q = arq.get(0);
-			doing = q;
-			arq.remove(0);
-			return q;
-		} else {
-			return null;
+				// Temps pour répondre
+				Thread.sleep(12000);
+
+				// Envoyer l'explications
+				messQuestion.setType("explications");
+				for (final Session monitor : arMonitors) {
+					monitor.getBasicRemote().sendObject(messQuestion);
+				}
+
+				// Envoyer la bonne réponse
+				messQuestion.setType("reponse");
+				for (final Session player : arPlayers) {
+					player.getBasicRemote().sendObject(messQuestion);
+				}
+
+				// Mise a jour des scores
+				updateScore(question.getLaReponse().getLibelle(), question.getTheme());
+				sendScoreList();
+
+				// Temps entre 2 questions pour lire la bonne réponse
+				Thread.sleep(5000);
+
+			}
+
+		} catch (final InterruptedException | IOException | EncodeException e) {
+			e.printStackTrace();
 		}
 	}
 
-	public String getLaReponse() {
-		return doing.getLaReponse().getLibelle();
-	}
-
-	public Hashtable<String, Integer> getScoreList() {
-		final Hashtable<String, Integer> tabScore = new Hashtable<>();
-		for (final Session s : ars) {
-			if(s.getUserProperties().get("type").equals("mobile")) {
-				final String name = (String) s.getUserProperties().get("name");
-				final int score = (int) s.getUserProperties().get("score");
-				tabScore.put(name, score);
+	private void updateScore(final String reponse, final String theme) {
+		boolean goodAnswer = false;
+		for (final Session player : arPlayers) {
+			goodAnswer = false;
+			if (reponse.equals(player.getUserProperties().get("reponse"))) {
+				int score = (int) player.getUserProperties().get("score");
+				score++;
+				player.getUserProperties().put("score", score);
+				player.getUserProperties().put("reponse", "");
+				goodAnswer = true;
+			}
+			if (player.getUserProperties().get("user") != null) {
+				final Utilisateur user = (Utilisateur) player.getUserProperties().get("user");
+				for (final Statistique stat : user.getlStat()) {
+					if (stat.getTheme().equals(theme)) {
+						stat.setNbQuestions(stat.getNbQuestions() + 1);
+						if (goodAnswer) {
+							stat.setNbReponse(stat.getNbReponse() + 1);
+						}
+					}
+					break;
+				}
 			}
 		}
-
-		return tabScore;
 	}
 
-	public int getId() {
-		return id;
+	public synchronized void addPlayer(final Session s) {
+		arPlayers.add(s);
+		sendScoreList();
 	}
 
-	public void setId(final int id) {
-		this.id = id;
+	public synchronized void removePlayer(final Session s) {
+		arPlayers.remove(s);
+		sendScoreList();
 	}
 
-	public ArrayList<Session> getArs() {
-		return ars;
+	public synchronized void addMonitor(final Session s) throws IOException, EncodeException {
+		arMonitors.add(s);
+		final QCM_InfoMonitor messInfoMonitor = new QCM_InfoMonitor("" + num);
+		s.getBasicRemote().sendObject(messInfoMonitor);
 	}
 
-	public List<Question> getArq() {
-		return arq;
+	public synchronized void removeMonitor(final Session s) {
+		arMonitors.remove(s);
+	}
+
+	public void sendScoreList() {
+		try {
+			final Hashtable<String, Integer> tabScore = new Hashtable<>();
+			for (final Session player : arPlayers) {
+				final String name = (String) player.getUserProperties().get("name");
+				final int score = (int) player.getUserProperties().get("score");
+				tabScore.put(name, score);
+			}
+
+			final QCM_Score messScore = new QCM_Score(tabScore);
+			for (final Session monitor : arMonitors) {
+				monitor.getBasicRemote().sendObject(messScore);
+			}
+		} catch (IOException | EncodeException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void setArq(final List<Question> arq) {
 		this.arq = arq;
 	}
 
-	public QuestionParameters getQp() {
-		return qp;
+	public boolean setANewMaster() {
+		if (!arMonitors.isEmpty()) {
+			arMonitors.get(0).getUserProperties().put("master", true);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
-	public void setQp(final QuestionParameters qp) {
-		this.qp = qp;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(final String name) {
-		this.name = name;
+	public void logoutAllPlayers() throws IOException {
+		for (final Session player : arPlayers) {
+			player.close();
+		}
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + id;
+		result = prime * result + num;
 		return result;
 	}
 
@@ -115,7 +169,7 @@ public class GameRoom {
 		if (getClass() != obj.getClass())
 			return false;
 		final GameRoom other = (GameRoom) obj;
-		if (id != other.id)
+		if (num != other.num)
 			return false;
 		return true;
 	}

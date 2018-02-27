@@ -68,10 +68,10 @@
 		</div><!-- /PageWrap-->
 
 		<!-- Boostrap core JS -->
-		<script type="text/javascript"src="Ressource/jquery/jquery.min.js"></script>
-		<script type="text/javascript"src="Ressource/bootstrap/js/bootstrap.bundle.min.js"></script>
+		<script type="text/javascript"src="./Ressource/jquery/jquery.min.js"></script>
+		<script type="text/javascript"src="./Ressource/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-		<script src="./Ressource/js/Ws_engine.js"></script>
+		<script src="./Ressource/js/Ws_engine_Mob.js"></script>
 
 	</body>
 </html>

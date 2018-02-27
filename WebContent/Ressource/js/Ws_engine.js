@@ -1,71 +1,37 @@
 var wsocket = null;
 var serviceLocation = "ws://" + window.location.href.split("/")[2]
 		+ "/Quiz-Connect/Quizcon";
-var explication = "";
-var name = "";
-var isRoom = false;
+var timer;
+var timeLeft;
 
 function openWS() {
 	wsocket = new WebSocket(serviceLocation);
 	wsocket.onmessage = onMessageReceived;
+	wsocket.onerror = onErrorReceived;
 }
 
 function closeWS() {
 	wsocket.close();
 }
 
-function logInv() {
+// Premiere fonction appellé
+// Ici nous somme sur un moniteur
+function conection() {
+	var mess = localStorage.getItem("mess");
+	if (mess != null) {
+		logMonitor();
+	} else {// erreur mess null
+		backToIndexPage();
+	}
+}
+
+function logMonitor() {
 	if (wsocket == null) {
 		openWS();
 	}
 	wsocket.onopen = function() {
-		var mess = {
-			type : "logInv",
-			invitName : "moniteur",
-			moniteurType : true
-		};
-		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) {
-			mess.moniteurType = false;
-			name = localStorage.getItem("NameMobile");
-			if(name == "")
-			{
-				name = namealea();	
-			}
-			mess.invitName = name;
-		}
-		wsocket.send(JSON.stringify(mess));
+		wsocket.send(localStorage.getItem("mess"));
 	}
-}
-
-/*function logUser() {
-	if (wsocket == null) {
-		openWS();
-	}
-	wsocket.onopen = function() {
-		var mess = {
-			type : "logUser",
-			invitName : "moniteur",
-			moniteurType : true
-		};
-		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) {
-			mess.moniteurType = false;
-			name = $("userEmail").val();
-			mess.invitName = name;
-		}
-		wsocket.send(JSON.stringify(mess));
-	}
-}*/
-
-function namealea()
-{
-	var nb = Math.floor(Math.random() * 15000);
-	var newName = "Guest" + nb;
-	return newName;
-}
-
-function joinRoom() {
-	wsocket.send(localStorage.getItem("mess"));
-	$("#idroom").html(JSON.parse(localStorage.getItem("mess")).roomId );
 }
 
 function getMaxQuestion() {
@@ -85,24 +51,39 @@ function getMaxQuestion() {
 	}
 }
 
+function onErrorReceived(evt) {
+	var msg = JSON.parse(evt.data); // native API
+	console.log(msg);
+}
+
 function onMessageReceived(evt) {
 	var msg = JSON.parse(evt.data); // native API
 	console.log(msg);
+
+	// Permet d'afficher la question
 	if (msg.type == "question") {
-		explication = msg.explication;
 		$('#question').empty();
-		$('#reponses').empty();
+		$('#explications').empty();
 		$('#question').append("<p>" + msg.question + "</p>");
-		if (navigator.userAgent.match(/(android|iphone|blackberry|symbian|symbianos|symbos|netfront|model-orange|javaplatform|iemobile|windows phone|samsung|htc|opera mobile|opera mobi|opera mini|presto|huawei|blazer|bolt|doris|fennec|gobrowser|iris|maemo browser|mib|cldc|minimo|semc-browser|skyfire|teashark|teleca|uzard|uzardweb|meego|nokia|bb10|playbook)/gi)) 
-		{
-			for (var i = 0; i < msg.reponses.length; i++) {
-				var rep = $('<input type="button" class="block" onclick="sendReponse(this)" value="'
-						+ msg.reponses[i] + '">');
-				rep.appendTo('#reponses');
-				
-			}
-		}
+
+		timeLeft = 12;
+		$("#countdowntimer").text(timeLeft);
+		timer = setInterval(function() {
+			timeLeft--;
+			$("#countdowntimer").text(timeLeft);
+
+		}, 1000);
+
 	}
+
+	// Affiche les explications
+	if (msg.type == "explications") {
+		clearInterval(timer);
+		$("#countdowntimer").empty();
+		$('#explications').text(msg.explications);
+	}
+
+	// Affiche la liste des joueurs avec leurs score
 	if (msg.type == "score") {
 		$("#scoreList").empty();
 		var sortedScore = [];
@@ -119,37 +100,18 @@ function onMessageReceived(evt) {
 		}
 	}
 
-	if (msg.type == "inform") {
-		if (msg.logInv && !msg.inRoom) {
-			joinRoom();
-		}
-
+	// Affiche id room en haut a droite
+	if (msg.type == "infoMonitor") {
+		var res = msg.roomId.substring(0, 3) + " ";
+		var res2 = msg.roomId.substring(3, 6);
+		$("#idroom").text(res + res2);
 	}
-		
-}
-
-function askQuestion() {
-	var mess = {
-		type : "question"
-	};
-	wsocket.send(JSON.stringify(mess));
-}
-function sendReponse(bt) {
-	var mess = {
-		type : "reponse",
-		reponse : ""
-	};
-	mess.reponse = bt.value;
-	console.log(mess);
-	wsocket.send(JSON.stringify(mess));
-	$('#reponses').empty();
-	$('#reponses').append(explication);
 
 }
 
 function sendParameters() {
 	var mess = {
-		type : "init",
+		type : "startGame",
 		nbQ : 0,
 		difficulties : [],
 		themes : [],
@@ -162,38 +124,12 @@ function sendParameters() {
 	mess.langs = getCheckedBoxes("ch_langs");
 
 	console.log(mess);
+	$('#explications').empty();
+
 	wsocket.send(JSON.stringify(mess));
-	console.log(mess);
-	wsocket.send(JSON.stringify(mess));
-	askQuestion();
+
 	$("#SendPara").prop('disabled', true);
 
-	timerWS($("#nbQ").val());
-
-}
-
-function timerWS(nbquestions) {
-
-	var timeleft = 10;
-	console.log(nbquestions);
-	var countdownTimer = setInterval(
-			function() {
-				timeleft--;
-				document.getElementById("countdowntimer").textContent = timeleft;
-				if (timeleft <= 0) {
-					clearInterval(countdownTimer);
-					if (nbquestions != 1) {
-						askQuestion();
-						document.getElementById("countdowntimer").textContent = "10";
-						timerWS(nbquestions - 1);
-
-					} else {
-						$('#reponses').html("Bienvenu dans le salon de jeu, pour vous permettre de repondre, il vous faut utilise votre smartphone a cette url, il vous faudra saisir l’id, qui se situe en haut a droite, de la room afin de la rejoindre. Vous aurez dix secondes pour repondre à chaque questions depuis votre smartphone. Have fun.");
-						$('#question').html("Regle");
-					}
-
-				}
-			}, 1000);
 }
 
 function getCheckedBoxes(chkboxName) {
@@ -207,9 +143,9 @@ function getCheckedBoxes(chkboxName) {
 	}
 	return checkboxesChecked.length > 0 ? checkboxesChecked : null;
 }
+function backToIndexPage() {
+	closeWS();
+	window.location.href = "/Quiz-Connect/GameServlet2";
+}
 
-var isConnected = localStorage.getItem("IsConnected?");
-console.log(isConnected);
-//mettre useragent
-if(isConnected == true) logUser();
-else logInv();
+conection();

@@ -10,24 +10,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
-import org.user.Utilisateur;
 
-import userService.UserServicesRemote;
+import roomServices.RoomServicesRemote;
 
 /**
- * Servlet implementation class StatUserServlet
+ * Servlet implementation class CheckRoomServlet
  */
-@WebServlet("/StatUserServlet")
-public class StatUserServlet extends HttpServlet {
+@WebServlet("/CheckRoomServlet")
+public class CheckRoomServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@EJB
-	UserServicesRemote usr;
+	RoomServicesRemote rsr;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
-	public StatUserServlet() {
+	public CheckRoomServlet() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
@@ -39,12 +38,19 @@ public class StatUserServlet extends HttpServlet {
 	protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		// final Utilisateur user = (Utilisateur)
-		// request.getSession().getAttribute("user");
-		final Utilisateur user = usr.login("az@gt.fr", "azerty");
-		final JSONObject jo = new JSONObject(usr.getStats(user));
 		response.setContentType("application/json");
-		response.getWriter().append(jo.toString());
+		final JSONObject jobject = new JSONObject();
+		jobject.put("canChangePage", false);
+
+		try {
+			final int roomId = Integer.parseInt(request.getParameter("roomId"));
+			final String password = request.getParameter("password");
+
+			jobject.put("canChangePage", rsr.canAccess(roomId, password));
+		} catch (final Exception e) {
+			// TODO: handle exception
+		}
+		response.getWriter().append(jobject.toString());
 	}
 
 	/**
